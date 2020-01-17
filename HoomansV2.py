@@ -54,19 +54,23 @@ def agify(df):
 
 def reproduce(df):
     for index, row in df.iterrows():
-        first_name = df.at[index, 'First Name']
-        last_name = df.at[index, 'Last Name']
-        age = df.at[index, 'Age']
-        gender = df.at[index, 'Gender']
+        if random.randint(0, 5) == 0:
+            first_name = df.at[index, 'First Name']
+            last_name = df.at[index, 'Last Name']
+            age = df.at[index, 'Age']
+            gender = df.at[index, 'Gender']
 
-        if age >= min_reproduction_age and gender == 'male':
-            female_pop = df.loc[df['Gender'] == 'female']
-            mate = female_pop.sample()
-            mate = mate.reset_index(drop=True)
-            print(mate)
-            mate_first_name = mate.at[0, 'First Name']
-            mate_last_name = mate.at[0, 'Last Name']
-            print(f"{first_name} {last_name} did the deed with {mate_first_name} {mate_last_name}")
+            if age >= min_reproduction_age and gender == 'male':
+                female_pop = df.loc[df['Gender'] == 'female']
+                mate = female_pop.sample()
+
+                df.at[mate.index, 'Virgin'] = False
+                df.at[index, 'Virgin'] = False
+
+                mate = mate.reset_index(drop=True)
+                mate_first_name = mate.at[0, 'First Name']
+                mate_last_name = mate.at[0, 'Last Name']
+                print(f"{first_name} {last_name} did the deed with {mate_first_name} {mate_last_name}")
 
 
 def simulate_year(df):
@@ -81,7 +85,7 @@ def main():
 
     while True:
         simulate_year(population)
-        #time.sleep(1)
+        time.sleep(0.5)
     
 
 main()
