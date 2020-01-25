@@ -4,10 +4,11 @@ import random
 import time
 import copy
 
+max_homo_chance = 50
 max_age = 70
 min_reproduction_age = 18
-initial_men = 3
-initial_female = 3
+initial_men = 10
+initial_female = 10
 population = pd.DataFrame(
     columns=[
     'First Name', 
@@ -15,6 +16,7 @@ population = pd.DataFrame(
     'Gender',
     'Age',
     'Virgin',
+    'Homo'
     ]
     )
 
@@ -44,12 +46,14 @@ def create_hooman(gender, lastname=''):
         last_name = lastname
     age = 0
     virgin = True
+    homo = False
 
     attributes.append(first_name)
     attributes.append(last_name)
     attributes.append(gender)
     attributes.append(age)
     attributes.append(virgin)
+    attributes.append(homo)
 
     return attributes
 
@@ -89,8 +93,9 @@ def reproduce(df):
             last_name = df.at[index, 'Last Name']
             age = df.at[index, 'Age']
             gender = df.at[index, 'Gender']
+            homo = df.at[index, 'Homo']
 
-            if age >= min_reproduction_age and gender == 'male':
+            if age >= min_reproduction_age and gender == 'male' and homo == False:
                 # Filter population by female
                 female_pop = df.loc[df['Gender'] == 'female']
                 # Choose random human from female_pop
@@ -117,6 +122,14 @@ def check_death(df):
         except:
             pass
 
+def homo_conversion(df):
+    for index, row in df.iterrows():
+        if random.randint(0, max_homo_chance) == 0:
+            # Convert hooman to homo.
+            if df.at[index, 'Homo'] == False:
+                df.at[index, 'Homo'] = True
+
+
 def simulate_year(df):
     ''' Simulate one year of life '''
     #df = df.reset_index(drop=True)
@@ -124,6 +137,7 @@ def simulate_year(df):
     check_death(df)
     agify(df)
     reproduce(df)
+    homo_conversion(df)
     print(population)
 
 def main():
@@ -134,7 +148,7 @@ def main():
 
     while True:
         simulate_year(population)
-        time.sleep(0.5)
+        time.sleep(0.2)
     
 
 main()
