@@ -1,14 +1,15 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 import names
 import random
 import time
 import copy
 
 max_homo_chance = 50
-max_age = 70
+max_age = 50
 min_reproduction_age = 18
-initial_men = 10
-initial_female = 10
+initial_men = 5
+initial_female = 5
 population = pd.DataFrame(
     columns=[
     'First Name', 
@@ -44,7 +45,7 @@ def create_hooman(gender, lastname=''):
     else:
         first_name = get_first_name(gender)
         last_name = lastname
-    age = 0
+    age = random.randint(1,10)
     virgin = True
     homo = False
 
@@ -129,6 +130,28 @@ def homo_conversion(df):
             if df.at[index, 'Homo'] == False:
                 df.at[index, 'Homo'] = True
 
+def graph_homo(df):
+    labels = ['No Homo', 'Homo']
+    sizes = [len(df["Homo"]) - sum(df["Homo"]), sum(df["Homo"])]
+    colors = ['yellowgreen', 'lightskyblue']
+    patches, texts = plt.pie(sizes, colors=colors, shadow=True, startangle=90)
+    plt.legend(patches, labels, loc="best")
+    plt.axis('equal')
+    plt.tight_layout()
+    plt.pause(.001)
+    plt.draw()
+
+def graph_family(df):
+    #df['Last Name'].value_counts().plot.bar()
+    #df.groupby('Homo').size().plot.bar()
+    #df['Homo'].hist()
+    pd.value_counts(df['Last Name']).plot.bar()
+
+def graph_gender(df):
+    df.groupby('Gender').Age.hist()
+
+def graph_age(df):
+    df.groupby('Age').Age.hist()
 
 def simulate_year(df):
     ''' Simulate one year of life '''
@@ -138,7 +161,11 @@ def simulate_year(df):
     agify(df)
     reproduce(df)
     homo_conversion(df)
-    print(population)
+    #graph_homo(df)
+    #graph_family(df)
+    #graph_gender(df)
+    #graph_age(df)
+    #print(population)
 
 def main():
     ''' Initialize humans + simulate years '''
@@ -146,9 +173,9 @@ def main():
     initialize_population()
     print(population)
 
-    while True:
+    while population.empty == False:
         simulate_year(population)
-        time.sleep(0.2)
+        #time.sleep(0.2)
     
 
 main()
