@@ -5,11 +5,11 @@ import random
 import time
 import copy
 
-max_homo_chance = 50
+max_homo_chance = 150
 max_age = 50
 min_reproduction_age = 18
-initial_men = 5
-initial_female = 5
+initial_men = 2
+initial_female = 2
 population = pd.DataFrame(
     columns=[
     'First Name', 
@@ -77,8 +77,9 @@ def initialize_child(last_name):
     ''' Adds child to population table '''
     global population
 
-    child_attributes = create_hooman(random_gender(), lastname=last_name)
-    population.loc[len(population), :] = child_attributes
+    child_attributes = [create_hooman(random_gender(), lastname=last_name)]
+    child = pd.DataFrame(child_attributes, columns=['First Name', 'Last Name', 'Gender', 'Age', 'Virgin', 'Homo'])
+    population = population.append(child, ignore_index=True)
 
 def agify(df):
     ''' For each human row, increases age by one year '''
@@ -88,7 +89,7 @@ def agify(df):
 def reproduce(df):
     ''' For each male human, 1/6 chance of trying to reproduce '''
     for index, row in df.iterrows():
-        if random.randint(0, 5) == 0:
+        if random.randint(0, 6) == 0:
             # Gather my information
             first_name = df.at[index, 'First Name']
             last_name = df.at[index, 'Last Name']
@@ -115,13 +116,10 @@ def reproduce(df):
                 initialize_child(last_name)
 
 def check_death(df):
-    for index, row in df.iterrows():
-        try:
-            if df.at[index, 'Age'] >= max_age:
-                print(f"{df.at[index, 'First Name']} {df.at[index, 'Last Name']} died at age {df.at[index, 'Age']}!")
-                df = df.drop(index, inplace=True)
-        except:
-            pass
+    indexNames = df[ df['Age'] == 50 ].index
+    for index in indexNames:
+        print(f"{df.at[index, 'First Name']} {df.at[index, 'Last Name']} died at age {df.at[index, 'Age']}!")
+    df = df.drop(indexNames, inplace=True)
 
 def homo_conversion(df):
     for index, row in df.iterrows():
@@ -161,11 +159,12 @@ def simulate_year(df):
     agify(df)
     reproduce(df)
     homo_conversion(df)
-    #graph_homo(df)
+    graph_homo(df)
     #graph_family(df)
     #graph_gender(df)
     #graph_age(df)
-    #print(population)
+    print(population)
+    print(f"Population: {len(df)}")
 
 def main():
     ''' Initialize humans + simulate years '''
