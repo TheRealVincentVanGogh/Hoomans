@@ -7,16 +7,18 @@ import time
 import copy
 import threading
 
+professions = ['Farmer', 'None', 'None', 'None', 'None']
+food_history = []
 seconds = []
 current_second = 0
 population_history = []
 starting_food = 10
-food = 100
+food = 20
 max_homo_chance = 150
-max_age = 50
+max_age = 100
 min_reproduction_age = 18
-initial_men = 5
-initial_female = 5
+initial_men = 10
+initial_female = 10
 population = pd.DataFrame(
     columns=[
     'First Name', 
@@ -25,7 +27,8 @@ population = pd.DataFrame(
     'Age',
     'Hunger',
     'Virgin',
-    'Homo'
+    'Homo',
+    'Profession'
     ]
     )
 
@@ -44,6 +47,10 @@ def get_first_name(my_gender):
     ''' Generates exclusively a first name based on gender '''
     return names.get_first_name(gender=my_gender)
 
+def random_profession():
+    ''' Chooses random profession from global list '''
+    return random.choice(professions)
+
 def create_hooman(gender, lastname=''):
     ''' Initiates human attributes, returns as list '''
     attributes = []
@@ -53,10 +60,11 @@ def create_hooman(gender, lastname=''):
     else:
         first_name = get_first_name(gender)
         last_name = lastname
-    age = random.randint(1,10)
+    age = random.randint(1,5)
     hunger = starting_food
     virgin = True
     homo = False
+    profession = random_profession()
 
     attributes.append(first_name)
     attributes.append(last_name)
@@ -65,6 +73,7 @@ def create_hooman(gender, lastname=''):
     attributes.append(hunger)
     attributes.append(virgin)
     attributes.append(homo)
+    attributes.append(profession)
 
     return attributes
 
@@ -88,7 +97,7 @@ def initialize_child(last_name):
     global population
 
     child_attributes = [create_hooman(random_gender(), lastname=last_name)]
-    child = pd.DataFrame(child_attributes, columns=['First Name', 'Last Name', 'Gender', 'Age', 'Hunger', 'Virgin', 'Homo'])
+    child = pd.DataFrame(child_attributes, columns=['First Name', 'Last Name', 'Gender', 'Age', 'Hunger', 'Virgin', 'Homo', 'Profession'])
     population = population.append(child, ignore_index=True)
 
 def agify(df):
@@ -107,8 +116,9 @@ def reproduce(df):
             gender = df.at[index, 'Gender']
             homo = df.at[index, 'Homo']
             hunger = df.at[index, 'Hunger']
+            profession = df.at[index, 'Profession']
 
-            if age >= min_reproduction_age and gender == 'male' and homo == False and hunger >= 5:
+            if age >= min_reproduction_age and gender == 'male' and homo == False and hunger >= 2:
                 # Filter population by female
                 female_pop = df.loc[df['Gender'] == 'female']
                 # Choose random human from female_pop
@@ -178,14 +188,24 @@ def graph_age(df):
 def graph_population_history(i):
     global current_second
     global population
-    time.sleep(1)
+    global food_history
+    global food
+    #time.sleep(1)
     current_second += 1
     seconds.append(current_second)
+
+    food_history.append(food)
+
     population_history.append(population.count(axis=0))
-    plt.plot(seconds, population_history)
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('# People/Food')
+    plt.plot(seconds, population_history, color='skyblue', label='Population' if i == 0 else "")
+    plt.plot(seconds, food_history, color='chartreuse', label='Food' if i == 0 else "")
+    plt.legend()
 
 def animate_population_graph():
-    ani = FuncAnimation(plt.gcf(), graph_population_history, interval=1000)
+    fig = plt.figure()
+    ani = FuncAnimation(fig, graph_population_history, interval=1000)
     plt.tight_layout()
     plt.show()
 
@@ -198,20 +218,34 @@ def eat(df):
     ''' simulates eating food to restore hunger. '''
     global food
     for index, row in df.iterrows():
-        if food >= 2 and df.at[index, 'Hunger'] < 5:
+        if food >= 2 and df.at[index, 'Hunger'] < 2:
             food -= 2
             df.at[index, 'Hunger'] += 2
 
 def food_restoration():
-    ''' simulates food gain to central store '''
+    ''' simulates magical food gain to central store '''
     global food
-    food += random.randint(3,15)
+    food += random.randint(5, 10)
 
 def survive(df):
     ''' Handles all energy '''
     food_restoration()
     basic_energy(df)
     eat(df)
+
+def work_farmer(index, df):
+    ''' Farmer work '''
+    ''' Farmers produce 1 - 5 food per year'''
+    global food
+    food += random.randint(2, 5)
+
+def work_profession(df):
+    ''' All profession work '''
+    for index, row in df.iterrows():
+        if df.at[index, 'Age'] >= 18:
+            if df.at[index, 'Profession'] == 'Farmer':
+                work_farmer(index, df)
+
 
 def simulate_year(df):
     ''' Simulate one year of life '''
@@ -222,6 +256,7 @@ def simulate_year(df):
     agify(df)
     reproduce(df)
     homo_conversion(df)
+    work_profession(df)
 
     #graph_homo(df)
     #graph_family(df)
@@ -242,7 +277,7 @@ def main():
 
     while population.empty == False:
         simulate_year(population)
-        time.sleep(1)
+        #time.sleep(0.5)
     
 
 main()
